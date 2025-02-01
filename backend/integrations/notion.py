@@ -180,3 +180,4 @@ async def get_items_notion(credentials) -> list[IntegrationItem]:
     except Exception as e:
         print(f"Error fetching Notion items: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error while fetching Notion items.")
+        
