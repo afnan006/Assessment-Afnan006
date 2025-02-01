@@ -8,16 +8,17 @@ import httpx
 import asyncio
 import base64
 import requests
+import os
 from integrations.integration_item import IntegrationItem
 
 from redis_client import add_key_value_redis, get_value_redis, delete_key_redis
 
-CLIENT_ID = 'XXX'
-CLIENT_SECRET = 'XXX'
+CLIENT_ID = os.getenv("NOTION_CLIENT_ID")
+CLIENT_SECRET = os.getenv("NOTION_CLIENT_SECRET")
 encoded_client_id_secret = base64.b64encode(f'{CLIENT_ID}:{CLIENT_SECRET}'.encode()).decode()
 
 REDIRECT_URI = 'http://localhost:8000/integrations/notion/oauth2callback'
-authorization_url = f'https://api.notion.com/v1/oauth/authorize?client_id={CLIENT_ID}&response_type=code&owner=user&redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Fintegrations%2Fnotion%2Foauth2callback'
+authorization_url = f'https://api.notion.com/v1/oauth/authorize?client_id=18cd872b-594c-8076-ab96-003761faaf6f&response_type=code&owner=user&redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Fintegrations%2Fnotion%2Foauth2callback'
 
 async def authorize_notion(user_id, org_id):
     state_data = {
@@ -137,22 +138,41 @@ def create_integration_item_metadata_object(
 
 async def get_items_notion(credentials) -> list[IntegrationItem]:
     """Aggregates all metadata relevant for a notion integration"""
-    credentials = json.loads(credentials)
-    response = requests.post(
-        'https://api.notion.com/v1/search',
-        headers={
-            'Authorization': f'Bearer {credentials.get("access_token")}',
-            'Notion-Version': '2022-06-28',
-        },
-    )
+    try:
+        credentials = json.loads(credentials)
+        response = requests.post(
+            'https://api.notion.com/v1/search',
+            headers={
+                'Authorization': f'Bearer {credentials.get("access_token")}',
+                'Notion-Version': '2022-06-28',
+            },
+        )
+        
+        if response.status_code != 200:
+            raise HTTPException(status_code=400, detail="Failed to fetch data from Notion.")
+        
+        results = response.json().get("results", [])
+        items = []
 
-    if response.status_code == 200:
-        results = response.json()['results']
-        list_of_integration_item_metadata = []
         for result in results:
-            list_of_integration_item_metadata.append(
-                create_integration_item_metadata_object(result)
-            )
+            # Create IntegrationItem objects
+            item = create_integration_item_metadata_object(result)
+            
+            # Log the item details in the terminal
+            print(f"Fetched Item: {item.name} (ID: {item.id})")
+            
+            # Convert IntegrationItem to dictionary for frontend compatibility
+            items.append({
+                "id": item.id,
+                "name": item.name,
+                "type": item.type,
+                "creation_time": item.creation_time,
+                "last_modified_time": item.last_modified_time,
+                "parent_id": item.parent_id,
+            })
+        
+        return items
 
-        print(list_of_integration_item_metadata)
-    return
+    except Exception as e:
+        print(f"Error fetching Notion items: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error while fetching Notion items.")

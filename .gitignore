@@ -1,0 +1,34 @@
+# Ignore Python-related files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+venv/
+env/
+myenv/
+dist/
+build/
+*.egg-info/
+
+# Ignore Node.js-related files
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Ignore IDE/editor-specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Ignore OS-specific files
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Ignore log files
+*.log
+
+# Ignore Redis dump files (if applicable)
+dump.rdb
