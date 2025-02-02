@@ -10,7 +10,7 @@ import axios from 'axios';
 const endpointMapping = {
     'Notion': 'notion',
     'Airtable': 'airtable',
-    'HubSpot': 'hubspot', // Ensure HubSpot is included
+    'HubSpot': 'hubspot', 
 };
 
 export const DataForm = ({ integrationType, credentials }) => {
@@ -21,8 +21,8 @@ export const DataForm = ({ integrationType, credentials }) => {
         try {
             const formData = new FormData();
             formData.append('credentials', JSON.stringify(credentials));
-            formData.append('user_id', 'TestUser'); // Replace with actual user ID
-            formData.append('org_id', '49173978');  // Replace with your HubSpot Account ID
+            formData.append('user_id', 'TestUser'); 
+            formData.append('org_id', '49173978');  
 
             const response = await axios.post(
                 `http://localhost:8000/integrations/${endpointMapping[integrationType]}/load`,
